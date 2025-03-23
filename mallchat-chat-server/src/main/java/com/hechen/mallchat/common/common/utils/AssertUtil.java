@@ -142,7 +142,7 @@ public class AssertUtil {
         }
     }
 
-    private static boolean isEmpty(Object obj) {
+    public static boolean isEmpty(Object obj) {
         return ObjectUtil.isEmpty(obj);
     }
 

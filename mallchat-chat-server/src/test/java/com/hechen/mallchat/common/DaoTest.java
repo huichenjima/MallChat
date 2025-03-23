@@ -5,9 +5,13 @@ import com.hechen.mallchat.common.common.config.ThreadPoolConfig;
 import com.hechen.mallchat.common.common.thread.MyUncaughtExceptionHandler;
 import com.hechen.mallchat.common.common.utils.JwtUtils;
 import com.hechen.mallchat.common.common.utils.RedisUtils;
+import com.hechen.mallchat.common.user.dao.UserBackpackDao;
 import com.hechen.mallchat.common.user.dao.UserDao;
 import com.hechen.mallchat.common.user.domain.entity.User;
+import com.hechen.mallchat.common.user.domain.enums.IdempotentEnum;
+import com.hechen.mallchat.common.user.service.IUserBackpackService;
 import com.hechen.mallchat.common.user.service.LoginService;
+import com.hechen.mallchat.common.user.service.impl.UserBackpackServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.common.service.WxService;
@@ -62,9 +66,18 @@ public class DaoTest {
     private LoginService loginService;
 
     @Autowired
+    private IUserBackpackService userBackpackService;
+
+    @Autowired
     @Qualifier(ThreadPoolConfig.MALLCHAT_EXECUTOR) //@Qualifier 注解是 Spring 框架中用于解决同一个类型存在多个Bean时，明确指定使用哪一个Bean的方式。
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
+
+    @Test
+    public void IdempotentTest(){
+        userBackpackService.acquireItem(11016L,6L, IdempotentEnum.UID,11016+"");
+
+    }
 
     @Test
     public void jwttest(){

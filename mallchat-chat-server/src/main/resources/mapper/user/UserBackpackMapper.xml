@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.hechen.mallchat.common.user.mapper.UserBackpackMapper">
+    <!-- 结果映射定义 -->
+    <resultMap id="BadgeResp" type="com.hechen.mallchat.common.user.domain.vo.resp.BadgeResp">
+        <id column="id" property="id" />
+        <result column="img" property="img" />
+        <result column="describe" property="describe" />
+        <result column="obtain" property="obtain"/>
+        <result column="status" property="wearing"/>
+        <!-- 根据实际情况添加更多字段 -->
+    </resultMap>
+    <select id="findBadgeResp" resultMap="BadgeResp">
+        SELECT ic.*,b.status,1 as obtain
+        FROM user_backpack b
+                 LEFT JOIN item_config ic ON b.item_id = ic.id where ic.type=#{type} and b.uid=#{uid}
+    </select>
 
 </mapper>

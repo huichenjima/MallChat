@@ -1,27 +1,29 @@
 package com.hechen.mallchat.common.user.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.system.UserInfo;
-import com.hechen.mallchat.common.common.domain.enums.YesOrNoEnum;
-import com.hechen.mallchat.common.common.domain.vo.resp.ApiResult;
-import com.hechen.mallchat.common.common.exception.BusinessException;
-import com.hechen.mallchat.common.user.dao.UserBackpackDao;
-import com.hechen.mallchat.common.user.dao.UserDao;
-import com.hechen.mallchat.common.user.domain.entity.User;
-import com.hechen.mallchat.common.user.domain.entity.UserBackpack;
+import com.hechen.mallchat.common.common.annotation.RedissonLock;
+import com.hechen.mallchat.common.common.event.UserBlackEvent;
+import com.hechen.mallchat.common.common.event.UserRegisterEvent;
+import com.hechen.mallchat.common.common.utils.AssertUtil;
+import com.hechen.mallchat.common.user.dao.*;
+import com.hechen.mallchat.common.user.domain.entity.*;
+import com.hechen.mallchat.common.user.domain.enums.BlackTypeEnum;
 import com.hechen.mallchat.common.user.domain.enums.ItemEnum;
 import com.hechen.mallchat.common.user.domain.enums.ItemTypeEnum;
-import com.hechen.mallchat.common.user.domain.vo.req.ModifyNameReq;
+import com.hechen.mallchat.common.user.domain.vo.req.BlackReq;
+import com.hechen.mallchat.common.user.domain.vo.resp.BadgeResp;
 import com.hechen.mallchat.common.user.domain.vo.resp.UserInfoResp;
 import com.hechen.mallchat.common.user.service.UserService;
 import com.hechen.mallchat.common.user.service.adapter.UserAdapter;
-import org.springframework.beans.BeanUtils;
+import com.hechen.mallchat.common.user.service.cache.ItemCache;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * ClassName: UserServiceImpl
@@ -33,12 +35,25 @@ import java.util.Objects;
  * @Version 1.0
  */
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
     @Autowired
-    UserDao userDao;
+    private UserDao userDao;
 
     @Autowired
-    UserBackpackDao userBackpackDao;
+    private UserBackpackDao userBackpackDao;
+
+    @Autowired
+    private ItemConfigDao itemConfigDao;
+
+    @Autowired
+    private ItemCache itemCache;
+    //发送消息有两种方式，mq和spring自己的发送消息方式
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    @Autowired
+    private BlackDao blackDao;
 
 
 
@@ -47,7 +62,8 @@ public class UserServiceImpl implements UserService {
     public Long register(User insert) {
         //todo 后序有其他业务 比如新注册用户送改名卡之类，涉及到多个数据库的操作，这里要有事务
         userDao.save(insert);
-        //todo 发送用户注册的事件
+        //发送用户注册的事件,发送者
+        applicationEventPublisher.publishEvent(new UserRegisterEvent(this,insert));
 
         //返回用户的uid
         return insert.getId();
@@ -64,31 +80,116 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
-    public void modifyName(Long uid, ModifyNameReq modifyNameReq) {
+    @Transactional(rollbackFor = Exception.class)
+    @RedissonLock(key = "#uid")
+    public void modifyName(Long uid, String name) {
 //        名字不能重复,重复则返回
-        User oldUser = userDao.getByName(modifyNameReq.getName());
-        if(Objects.nonNull(oldUser)){
-            throw new BusinessException("用户名重复,换个名字吧");
+        User oldUser = userDao.getByName(name);
+        //断言简化异常抛出处理
+        AssertUtil.isEmpty(oldUser,"名字已经被抢占了，请换一个");
+        //先判断有没有改名卡了，查询第一张改名卡
+        UserBackpack modifyNameItem = userBackpackDao.getFirstValidItem(uid, ItemEnum.MODIFY_NAME_CARD.getId());
+        AssertUtil.isNotEmpty(modifyNameItem,"改名卡不够了，等后序活动送改名卡吧");
+        //使用改名卡进行改名
+        boolean success = userBackpackDao.useItem(modifyNameItem);
+        if (success)
+        {
+            //再进行改名，
+            userDao.modifyName(uid,name);
+            // todo 因为修改了数据库 要进行缓存操作
         }
-        //先判断有没有改名卡了
-        //查询改名卡张数
-        Integer modifyNameChance = userBackpackDao.getCountByValidItemId(uid, ItemEnum.MODIFY_NAME_CARD.getId());
-        if(modifyNameChance==null||modifyNameChance<=0) //没有改名机会了
-            return;
-        //进行改名，先减少改名卡再进行改名,只更新一张改名卡
-        boolean update = userBackpackDao.lambdaUpdate()
-                .eq(UserBackpack::getItemId, ItemEnum.MODIFY_NAME_CARD.getId())
-                .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
-                .set(UserBackpack::getStatus, YesOrNoEnum.YES.getStatus())
-                .last("LIMIT 1")
-                .update();
-        //再进行改名，
 
-        boolean update1 = userDao.lambdaUpdate()
-                .eq(User::getId, uid)
-                .set(User::getName, modifyNameReq.getName())
-                .update();
+
         //结束
+    }
+
+    @Override
+    //本地缓存 ，不需要远端跟redis进行io操作
+    public List<BadgeResp> badges(Long uid) {
+        //通过缓存获取了所有的徽章信息
+        List<ItemConfig> itemConfigs = itemCache.getByType(ItemTypeEnum.BADGE.getType());
+        //查询用户拥有徽章
+        List<UserBackpack> backpacks = userBackpackDao.getByItemIds(uid, itemConfigs.stream().map(ItemConfig::getId).collect(Collectors.toList()));
+        //查询用户佩戴的徽章
+        User user = userDao.getById(uid);
+
+        return UserAdapter.buildBadgeResp(itemConfigs,backpacks,user);
+
+
+    }
+    //自己写的 有问题，因为把itemconfig的status当做是否佩戴了实际上是表示是否拥有该徽章，不过写的多表联查可以参考语法都是正确的
+//    @Override
+//    //本地缓存 ，不需要远端跟redis进行io操作
+//    public List<BadgeResp> badges(Long uid) {
+//        //这里应该关联背包和物品表 差物品表的描述
+//
+//        //进行联查找出当前用户有的徽章和使用情况
+//        List<BadgeResp> hasBadgeResps =userBackpackDao.findUserBadges(uid,ItemTypeEnum.BADGE.getType());
+//        //查找剩余没有的徽章
+//        List<Long> longList = hasBadgeResps.stream().map(BadgeResp::getId).collect(Collectors.toList());
+//        List<ItemConfig> retainItemconfig=itemConfigDao.findhasNoIdList(longList,ItemTypeEnum.BADGE.getType());
+//        //设置为拥有与穿戴为0
+//        List<BadgeResp> retainBadgeResps = retainItemconfig.stream().map(itemConfig -> BeanUtil.copyProperties(itemConfig, BadgeResp.class)).collect(Collectors.toList());
+//        retainBadgeResps.forEach(retainBadgeResp->{retainBadgeResp.setObtain(0);retainBadgeResp.setWearing(0);});
+//
+//        //合并
+//        hasBadgeResps.addAll(retainBadgeResps);
+//
+//        return hasBadgeResps;
+//
+//    }
+
+    //佩戴徽章功能
+    @Override
+    public void wearingBadge(Long uid, Long itemId) {
+        //确保有徽章
+        UserBackpack firstValidItem = userBackpackDao.getFirstValidItem(uid, itemId);
+        AssertUtil.isNotEmpty(firstValidItem,"您还没有这个徽章，快速获得吧！");
+        //保证是徽章而不是改名卡
+        ItemConfig itemConfig = itemConfigDao.getById(firstValidItem.getId());
+        AssertUtil.equal(itemConfig.getType(),ItemTypeEnum.BADGE.getType(),"只有徽章才可以佩戴徽章哦");
+        //保证了用户有当前徽章，进行佩戴即更新user表
+        boolean b = userDao.wearingBadge(uid, itemId);
+    }
+
+    //拉黑用户
+    @Override
+    @Transactional
+    public void black(BlackReq req) {
+        //拉黑目标的uid
+        Long uid=req.getUid();
+        Black black = new Black();
+        black.setTarget(uid.toString());
+        black.setType(BlackTypeEnum.UID.getType());
+        Black old = blackDao.getbyUid(uid.toString());
+        AssertUtil.isEmpty(old,"已经拉黑过了该用户哦");
+        blackDao.save(black);
+        //拉黑用户的iP
+        User user = userDao.getById(uid);
+        if (Objects.nonNull(user.getIpInfo()))//这里要保证有ip信息，不然会空指针异常
+        {
+            blackIp(user.getIpInfo().getCreateIp());
+            if (user.getIpInfo().getCreateIp()!=user.getIpInfo().getUpdateIp())
+                blackIp(user.getIpInfo().getUpdateIp());
+        }
+
+        //拉黑完成,推送消息
+        applicationEventPublisher.publishEvent(new UserBlackEvent(this,user));
+
+
+    }
+
+    private void blackIp(String ip) {
+        if (Objects.isNull(ip))
+            return;
+        try {
+            Black black = new Black();
+            black.setType(BlackTypeEnum.IP.getType());
+            black.setTarget(ip);
+            blackDao.save(black);
+        } catch (Exception e) {
+            log.info("重复进行拉黑了哦");
+
+        }
     }
 }

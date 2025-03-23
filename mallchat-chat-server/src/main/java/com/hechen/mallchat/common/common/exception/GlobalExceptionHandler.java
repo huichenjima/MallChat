@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    //valid注解框架中校验异常
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ApiResult<?> methodArgumentNotValidException(MethodArgumentNotValidException e){
         StringBuilder errorMsg=new StringBuilder();

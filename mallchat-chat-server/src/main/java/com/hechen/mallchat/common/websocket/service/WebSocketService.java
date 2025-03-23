@@ -26,4 +26,6 @@ public interface WebSocketService {
     void waitAuthorize(Integer code);
 
     void authorize(Channel channel, String token);
+
+    void sendMsgToAll(WSBaseResp<?> msg);
 }
