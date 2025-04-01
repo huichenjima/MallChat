@@ -65,6 +65,10 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
             {
                 webSocketService.authorize(ctx.channel(),token);
             }
+            else
+            {
+                log.info("没有附带token");
+            }
 
 
         }

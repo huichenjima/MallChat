@@ -5,23 +5,31 @@ import com.hechen.mallchat.common.common.event.UserBlackEvent;
 import com.hechen.mallchat.common.common.event.UserRegisterEvent;
 import com.hechen.mallchat.common.common.utils.AssertUtil;
 import com.hechen.mallchat.common.user.dao.*;
+import com.hechen.mallchat.common.user.domain.dto.ItemInfoDTO;
+import com.hechen.mallchat.common.user.domain.dto.SummeryInfoDTO;
 import com.hechen.mallchat.common.user.domain.entity.*;
 import com.hechen.mallchat.common.user.domain.enums.BlackTypeEnum;
 import com.hechen.mallchat.common.user.domain.enums.ItemEnum;
 import com.hechen.mallchat.common.user.domain.enums.ItemTypeEnum;
 import com.hechen.mallchat.common.user.domain.vo.req.BlackReq;
+import com.hechen.mallchat.common.user.domain.vo.req.ItemInfoReq;
+import com.hechen.mallchat.common.user.domain.vo.req.SummeryInfoReq;
 import com.hechen.mallchat.common.user.domain.vo.resp.BadgeResp;
 import com.hechen.mallchat.common.user.domain.vo.resp.UserInfoResp;
 import com.hechen.mallchat.common.user.service.UserService;
 import com.hechen.mallchat.common.user.service.adapter.UserAdapter;
 import com.hechen.mallchat.common.user.service.cache.ItemCache;
+import com.hechen.mallchat.common.user.service.cache.UserCache;
+import com.hechen.mallchat.common.user.service.cache.UserSummaryCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -49,12 +57,62 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private ItemCache itemCache;
     //发送消息有两种方式，mq和spring自己的发送消息方式
+
+    @Autowired
+    private UserCache userCache;
+
+    @Autowired
+    private UserSummaryCache userSummaryCache;
+
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
     private BlackDao blackDao;
 
+
+    @Override
+    public List<SummeryInfoDTO> getSummeryUserInfo(SummeryInfoReq req) {
+        //需要前端同步的uid ，也就是需要更新缓存的uid列表
+        List<Long> uidList = getNeedSyncUidList(req.getReqList());
+        //加载用户信息
+        Map<Long, SummeryInfoDTO> batch = userSummaryCache.getBatch(uidList);
+        return req.getReqList()
+                .stream()
+                .map(a -> batch.containsKey(a.getUid()) ? batch.get(a.getUid()) : SummeryInfoDTO.skip(a.getUid()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ItemInfoDTO> getItemInfo(ItemInfoReq req) {//简单做，更新时间可判断被修改。没有用到更新时间，因为徽章数量小
+        return req.getReqList().stream().map(a -> {
+            ItemConfig itemConfig = itemCache.getById(a.getItemId()); //这里徽章信息缓存获取不是使用redis而是使用springcache
+            if (Objects.nonNull(a.getLastModifyTime()) && a.getLastModifyTime() >= itemConfig.getUpdateTime().getTime()) {
+                return ItemInfoDTO.skip(a.getItemId());
+            }
+            ItemInfoDTO dto = new ItemInfoDTO();
+            dto.setItemId(itemConfig.getId());
+            dto.setImg(itemConfig.getImg());
+            dto.setDescribe(itemConfig.getDescribe());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+    //sync是同步的意思，获取需要同步的uid列表
+    private List<Long> getNeedSyncUidList(List<SummeryInfoReq.infoReq> reqList) {
+        List<Long> needSyncUidList = new ArrayList<>();
+        //获取缓存中的用户的最后刷新时间
+        List<Long> userModifyTime = userCache.getUserModifyTime(reqList.stream().map(SummeryInfoReq.infoReq::getUid).collect(Collectors.toList()));
+        //下面判断用户是否进行了更新，前端的缓存才需要进行更新
+        for (int i = 0; i < reqList.size(); i++) {
+            SummeryInfoReq.infoReq infoReq = reqList.get(i);
+            Long modifyTime = userModifyTime.get(i);
+            if (Objects.isNull(infoReq.getLastModifyTime()) || (Objects.nonNull(modifyTime) && modifyTime > infoReq.getLastModifyTime())) {
+                needSyncUidList.add(infoReq.getUid());
+            }
+        }
+        return needSyncUidList;
+    }
 
 
     @Override
@@ -96,10 +154,9 @@ public class UserServiceImpl implements UserService {
         {
             //再进行改名，
             userDao.modifyName(uid,name);
-            // todo 因为修改了数据库 要进行缓存操作
+            //因为修改了用户名，删除用户缓存并且更新用户最后修改时间
+            userCache.userInfoChange(uid);
         }
-
-
         //结束
     }
 
@@ -150,6 +207,8 @@ public class UserServiceImpl implements UserService {
         AssertUtil.equal(itemConfig.getType(),ItemTypeEnum.BADGE.getType(),"只有徽章才可以佩戴徽章哦");
         //保证了用户有当前徽章，进行佩戴即更新user表
         boolean b = userDao.wearingBadge(uid, itemId);
+        //因为更新了用户佩戴徽章，所以删除缓存并且修改用户最后刷新时间
+        userCache.userInfoChange(uid);
     }
 
     //拉黑用户

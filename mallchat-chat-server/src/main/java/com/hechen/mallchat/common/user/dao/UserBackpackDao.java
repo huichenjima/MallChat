@@ -69,17 +69,25 @@ public class UserBackpackDao extends ServiceImpl<UserBackpackMapper, UserBackpac
                 .list();
 
     }
+    //重载了 ，这里两个参数都是列表
+    public List<UserBackpack> getByItemIds(List<Long> uids, List<Long> itemIds) {
+        return lambdaQuery().in(UserBackpack::getUid, uids)
+                .in(UserBackpack::getItemId, itemIds)
+                .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
+                .list();
+    }
 
     public UserBackpack getByIdempotent(String idempotent) {
         return lambdaQuery().eq(UserBackpack::getIdempotent,idempotent).one();
     }
 
-    public boolean acquireItem(Long uid, Long itemId, String idempotent) {
+    public UserBackpack acquireItem(Long uid, Long itemId, String idempotent) {
         UserBackpack userBackpack = new UserBackpack();
         userBackpack.setItemId(itemId);
         userBackpack.setUid(uid);
         userBackpack.setIdempotent(idempotent);
         userBackpack.setStatus(YesOrNoEnum.NO.getStatus());
-        return this.save(userBackpack);
+        boolean save = this.save(userBackpack);
+        return userBackpack;
     }
 }

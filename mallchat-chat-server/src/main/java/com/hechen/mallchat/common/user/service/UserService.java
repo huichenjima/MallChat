@@ -1,10 +1,14 @@
 package com.hechen.mallchat.common.user.service;
 
 import com.hechen.mallchat.common.common.domain.vo.resp.ApiResult;
+import com.hechen.mallchat.common.user.domain.dto.ItemInfoDTO;
+import com.hechen.mallchat.common.user.domain.dto.SummeryInfoDTO;
 import com.hechen.mallchat.common.user.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.hechen.mallchat.common.user.domain.vo.req.BlackReq;
+import com.hechen.mallchat.common.user.domain.vo.req.ItemInfoReq;
 import com.hechen.mallchat.common.user.domain.vo.req.ModifyNameReq;
+import com.hechen.mallchat.common.user.domain.vo.req.SummeryInfoReq;
 import com.hechen.mallchat.common.user.domain.vo.resp.BadgeResp;
 import com.hechen.mallchat.common.user.domain.vo.resp.UserInfoResp;
 
@@ -32,4 +36,8 @@ public interface UserService {
     void wearingBadge(Long uid, Long itemId);
 
     void black(BlackReq req);
+
+    List<SummeryInfoDTO> getSummeryUserInfo(SummeryInfoReq req);
+
+    List<ItemInfoDTO> getItemInfo(ItemInfoReq req);
 }

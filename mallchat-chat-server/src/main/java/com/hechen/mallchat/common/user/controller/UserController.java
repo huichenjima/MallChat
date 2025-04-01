@@ -7,10 +7,10 @@ import com.hechen.mallchat.common.common.domain.vo.resp.ApiResult;
 import com.hechen.mallchat.common.common.interceptor.TokenInterceptor;
 import com.hechen.mallchat.common.common.utils.AssertUtil;
 import com.hechen.mallchat.common.common.utils.RequestHolder;
+import com.hechen.mallchat.common.user.domain.dto.ItemInfoDTO;
+import com.hechen.mallchat.common.user.domain.dto.SummeryInfoDTO;
 import com.hechen.mallchat.common.user.domain.enums.RoleEnum;
-import com.hechen.mallchat.common.user.domain.vo.req.BlackReq;
-import com.hechen.mallchat.common.user.domain.vo.req.ModifyNameReq;
-import com.hechen.mallchat.common.user.domain.vo.req.WearingBadgeReq;
+import com.hechen.mallchat.common.user.domain.vo.req.*;
 import com.hechen.mallchat.common.user.domain.vo.resp.BadgeResp;
 import com.hechen.mallchat.common.user.domain.vo.resp.UserInfoResp;
 import com.hechen.mallchat.common.user.service.IRoleService;
@@ -55,6 +55,18 @@ public class UserController {
         RequestInfo requestInfo = RequestHolder.get();
         Long uid = requestInfo.getUid();
         return ApiResult.success(userService.getUserInfo(uid));
+    }
+
+    @PostMapping("/public/summary/userInfo/batch")
+    @ApiOperation("用户聚合信息-返回的代表需要刷新的")
+    public ApiResult<List<SummeryInfoDTO>> getSummeryUserInfo(@Valid @RequestBody SummeryInfoReq req) {
+        return ApiResult.success(userService.getSummeryUserInfo(req));
+    }
+
+    @PostMapping("/public/badges/batch")
+    @ApiOperation("徽章聚合信息-返回的代表需要刷新的")
+    public ApiResult<List<ItemInfoDTO>> getItemInfo(@Valid @RequestBody ItemInfoReq req) {
+        return ApiResult.success(userService.getItemInfo(req));
     }
 
     @PutMapping("/name")

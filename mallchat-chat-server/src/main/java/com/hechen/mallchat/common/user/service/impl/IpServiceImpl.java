@@ -11,6 +11,7 @@ import com.hechen.mallchat.common.user.domain.entity.IpInfo;
 import com.hechen.mallchat.common.user.domain.entity.User;
 import com.hechen.mallchat.common.user.service.IpService;
 import com.hechen.mallchat.common.user.service.UserService;
+import com.hechen.mallchat.common.user.service.cache.UserCache;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.DisposableBean;
@@ -38,6 +39,9 @@ import java.util.concurrent.TimeUnit;
 public class IpServiceImpl implements IpService, DisposableBean {
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private UserCache userCache;
     //这个线程池只有一个线程，保证了排队的效果 ，防止淘宝接口请求过多报错
     private static ExecutorService executor = new ThreadPoolExecutor(1, 1,
             0L, TimeUnit.MILLISECONDS,
@@ -61,6 +65,8 @@ public class IpServiceImpl implements IpService, DisposableBean {
                 //从淘宝接口拿到了ip细节下面对数据库进行更新
                 User update = User.builder().id(uid).ipInfo(ipInfo).build();
                 boolean b = userDao.updateById(update);
+                //因为修改了ip更新了用户信息删除缓存并且更新用户最后修改时间
+                userCache.userInfoChange(uid);
             }
         });
 
