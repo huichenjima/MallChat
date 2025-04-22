@@ -1,6 +1,7 @@
 package com.hechen.mallchat.common.chat.domain.vo.resp.msg;
 
-import com.abin.mallchat.common.common.utils.discover.domain.UrlInfo;
+
+import com.hechen.mallchat.common.common.utils.discover.domain.UrlInfo;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

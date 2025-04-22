@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.hechen.mallchat.common.common.exception.BusinessException;
 import com.hechen.mallchat.common.common.exception.CommonErrorEnum;
 import com.hechen.mallchat.common.common.exception.ErrorEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.HibernateValidator;
 
 import javax.validation.ConstraintViolation;
@@ -15,6 +16,7 @@ import java.util.*;
 /**
  * 校验工具类
  */
+@Slf4j
 public class AssertUtil {
 
     /**
@@ -58,6 +60,7 @@ public class AssertUtil {
                 errorMsg.append(violation.getPropertyPath().toString()).append(":").append(violation.getMessage()).append(",");
             }
             //去掉最后一个逗号
+            log.error(errorMsg.toString().substring(0, errorMsg.length() - 1));
             throwException(CommonErrorEnum.PARAM_INVALID, errorMsg.toString().substring(0, errorMsg.length() - 1));
         }
     }

@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.hechen</groupId>
+    <groupId>com.hechen.mallchat</groupId>
     <artifactId>MallChatMy</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
@@ -12,6 +12,8 @@
         <module>mallchat-chat-server</module>
         <module>mallchat-framework</module>
     </modules>
+
+
 
 
     <parent>
@@ -52,8 +54,13 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.hechen</groupId>
+                <groupId>com.hechen.mallchat</groupId>
                 <artifactId>mallchat-common-starter</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hechen.mallchat</groupId>
+                <artifactId>mallchat-transaction</artifactId>
                 <version>${version}</version>
             </dependency>
             <dependency>

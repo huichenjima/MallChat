@@ -1,6 +1,6 @@
 package com.hechen.mallchat.common.chat.domain.vo.req.member;
 
-import com.abin.mallchat.common.common.domain.vo.request.CursorPageBaseReq;
+import com.hechen.mallchat.common.common.domain.vo.req.CursorPageBaseReq;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -45,19 +45,19 @@ public class ChatController {
         return userCache.getBlackMap().getOrDefault(BlackTypeEnum.UID.getType(), new HashSet<>());
     }
 
-    @GetMapping("/public/msg/page")
-    @ApiOperation("消息列表")
+//    @GetMapping("/public/msg/page")
+//    @ApiOperation("消息列表")
 //    @FrequencyControl(time = 120, count = 20, target = FrequencyControl.Target.IP)
-    public ApiResult<CursorPageBaseResp<ChatMessageResp>> getMsgPage(@Valid ChatMessagePageReq request) {
-        CursorPageBaseResp<ChatMessageResp> msgPage = chatService.getMsgPage(request, RequestHolder.get().getUid());
-        filterBlackMsg(msgPage);
-        return ApiResult.success(msgPage);
-    }
-
-    private void filterBlackMsg(CursorPageBaseResp<ChatMessageResp> memberPage) {
-        Set<String> blackMembers = getBlackUidSet();
-        memberPage.getList().removeIf(a -> blackMembers.contains(a.getFromUser().getUid().toString()));
-    }
+//    public ApiResult<CursorPageBaseResp<ChatMessageResp>> getMsgPage(@Valid ChatMessagePageReq request) {
+//        CursorPageBaseResp<ChatMessageResp> msgPage = chatService.getMsgPage(request, RequestHolder.get().getUid());
+//        filterBlackMsg(msgPage);
+//        return ApiResult.success(msgPage);
+//    }
+//
+//    private void filterBlackMsg(CursorPageBaseResp<ChatMessageResp> memberPage) {
+//        Set<String> blackMembers = getBlackUidSet();
+//        memberPage.getList().removeIf(a -> blackMembers.contains(a.getFromUser().getUid().toString()));
+//    }
 
     @PostMapping("/msg")
     @ApiOperation("发送消息")
@@ -70,42 +70,42 @@ public class ChatController {
         return ApiResult.success(chatService.getMsgResp(msgId, RequestHolder.get().getUid()));
     }
 
-    @PutMapping("/msg/mark")
-    @ApiOperation("消息标记")
-    @FrequencyControl(time = 10, count = 5, target = FrequencyControl.Target.UID)
-    public ApiResult<Void> setMsgMark(@Valid @RequestBody ChatMessageMarkReq request) {
-        chatService.setMsgMark(RequestHolder.get().getUid(), request);
-        return ApiResult.success();
-    }
-
-    @PutMapping("/msg/recall")
-    @ApiOperation("撤回消息")
-    @FrequencyControl(time = 20, count = 3, target = FrequencyControl.Target.UID)
-    public ApiResult<Void> recallMsg(@Valid @RequestBody ChatMessageBaseReq request) {
-        chatService.recallMsg(RequestHolder.get().getUid(), request);
-        return ApiResult.success();
-    }
-
-    @GetMapping("/msg/read/page")
-    @ApiOperation("消息的已读未读列表")
-    public ApiResult<CursorPageBaseResp<ChatMessageReadResp>> getReadPage(@Valid ChatMessageReadReq request) {
-        Long uid = RequestHolder.get().getUid();
-        return ApiResult.success(chatService.getReadPage(uid, request));
-    }
-
-    @GetMapping("/msg/read")
-    @ApiOperation("获取消息的已读未读总数")
-    public ApiResult<Collection<MsgReadInfoDTO>> getReadInfo(@Valid ChatMessageReadInfoReq request) {
-        Long uid = RequestHolder.get().getUid();
-        return ApiResult.success(chatService.getMsgReadInfo(uid, request));
-    }
-
-    @PutMapping("/msg/read")
-    @ApiOperation("消息阅读上报")
-    public ApiResult<Void> msgRead(@Valid @RequestBody ChatMessageMemberReq request) {
-        Long uid = RequestHolder.get().getUid();
-        chatService.msgRead(uid, request);
-        return ApiResult.success();
-    }
+//    @PutMapping("/msg/mark")
+//    @ApiOperation("消息标记")
+//    @FrequencyControl(time = 10, count = 5, target = FrequencyControl.Target.UID)
+//    public ApiResult<Void> setMsgMark(@Valid @RequestBody ChatMessageMarkReq request) {
+//        chatService.setMsgMark(RequestHolder.get().getUid(), request);
+//        return ApiResult.success();
+//    }
+//
+//    @PutMapping("/msg/recall")
+//    @ApiOperation("撤回消息")
+//    @FrequencyControl(time = 20, count = 3, target = FrequencyControl.Target.UID)
+//    public ApiResult<Void> recallMsg(@Valid @RequestBody ChatMessageBaseReq request) {
+//        chatService.recallMsg(RequestHolder.get().getUid(), request);
+//        return ApiResult.success();
+//    }
+//
+//    @GetMapping("/msg/read/page")
+//    @ApiOperation("消息的已读未读列表")
+//    public ApiResult<CursorPageBaseResp<ChatMessageReadResp>> getReadPage(@Valid ChatMessageReadReq request) {
+//        Long uid = RequestHolder.get().getUid();
+//        return ApiResult.success(chatService.getReadPage(uid, request));
+//    }
+//
+//    @GetMapping("/msg/read")
+//    @ApiOperation("获取消息的已读未读总数")
+//    public ApiResult<Collection<MsgReadInfoDTO>> getReadInfo(@Valid ChatMessageReadInfoReq request) {
+//        Long uid = RequestHolder.get().getUid();
+//        return ApiResult.success(chatService.getMsgReadInfo(uid, request));
+//    }
+//
+//    @PutMapping("/msg/read")
+//    @ApiOperation("消息阅读上报")
+//    public ApiResult<Void> msgRead(@Valid @RequestBody ChatMessageMemberReq request) {
+//        Long uid = RequestHolder.get().getUid();
+//        chatService.msgRead(uid, request);
+//        return ApiResult.success();
+//    }
 }
 

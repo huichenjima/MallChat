@@ -56,13 +56,13 @@ public class UserController {
         Long uid = requestInfo.getUid();
         return ApiResult.success(userService.getUserInfo(uid));
     }
-
+//    懒加载用户信息
     @PostMapping("/public/summary/userInfo/batch")
     @ApiOperation("用户聚合信息-返回的代表需要刷新的")
     public ApiResult<List<SummeryInfoDTO>> getSummeryUserInfo(@Valid @RequestBody SummeryInfoReq req) {
         return ApiResult.success(userService.getSummeryUserInfo(req));
     }
-
+    //    懒加载徽章信息
     @PostMapping("/public/badges/batch")
     @ApiOperation("徽章聚合信息-返回的代表需要刷新的")
     public ApiResult<List<ItemInfoDTO>> getItemInfo(@Valid @RequestBody ItemInfoReq req) {
