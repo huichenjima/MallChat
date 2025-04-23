@@ -1,6 +1,7 @@
 package com.hechen.mallchat.common.common.domain.dto;
 
 
+import com.hechen.mallchat.common.user.domain.enums.WSPushTypeEnum;
 import com.hechen.mallchat.common.websocket.domain.vo.resp.WSBaseResp;
 import lombok.AllArgsConstructor;
 import lombok.Data;

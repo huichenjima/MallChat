@@ -1,5 +1,6 @@
 package com.hechen.mallchat.common.websocket.domain.vo.resp;
 
+import com.hechen.mallchat.common.chat.domain.dto.ChatMsgRecallDTO;
 import lombok.Data;
 
 /**
@@ -8,7 +9,5 @@ import lombok.Data;
  * Date: 2023-03-19
  */
 @Data
-public class WSMsgRecall {
+public class WSMsgRecall extends ChatMsgRecallDTO {
 }
-//public class WSMsgRecall extends ChatMsgRecallDTO {
-//}

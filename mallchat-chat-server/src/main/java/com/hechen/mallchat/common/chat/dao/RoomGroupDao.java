@@ -23,4 +23,10 @@ public class RoomGroupDao extends ServiceImpl<RoomGroupMapper, RoomGroup> {
         List<RoomGroup> list = lambdaQuery().in(RoomGroup::getRoomId, roomIds).list();
         return list;
     }
+
+    public RoomGroup getByRoomId(Long roomId) {
+        RoomGroup one = lambdaQuery().eq(RoomGroup::getRoomId, roomId).one();
+        return one;
+
+    }
 }

@@ -1,8 +1,10 @@
 package com.hechen.mallchat.common.chat.service;
 
 import com.hechen.mallchat.common.chat.domain.entity.Message;
+import com.hechen.mallchat.common.chat.domain.vo.req.ChatMessageBaseReq;
 import com.hechen.mallchat.common.chat.domain.vo.req.ChatMessagePageReq;
 import com.hechen.mallchat.common.chat.domain.vo.req.ChatMessageReq;
+import com.hechen.mallchat.common.chat.domain.vo.resp.ChatMemberStatisticResp;
 import com.hechen.mallchat.common.chat.domain.vo.resp.ChatMessageResp;
 import com.hechen.mallchat.common.common.domain.vo.resp.CursorPageBaseResp;
 
@@ -24,4 +26,9 @@ public interface ChatService {
     ChatMessageResp getMsgResp(Message message, Long receiveUid);
 
 
+    ChatMemberStatisticResp getMemberStatistic();
+
+    CursorPageBaseResp<ChatMessageResp> getMsgPage(ChatMessagePageReq request, Long uid);
+
+    void recallMsg(Long uid, ChatMessageBaseReq request);
 }

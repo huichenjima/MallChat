@@ -29,15 +29,15 @@ public class GroupMemberCache {
     @Autowired
     private GroupMemberDao groupMemberDao;
 
-//    @Cacheable(cacheNames = "member", key = "'groupMember'+#roomId")
-//    public List<Long> getMemberUidList(Long roomId) {
-//        RoomGroup roomGroup = roomGroupDao.getByRoomId(roomId);
-//        if (Objects.isNull(roomGroup)) {
-//            return null;
-//        }
-//        return groupMemberDao.getMemberUidList(roomGroup.getId());
-//    }
-
+    @Cacheable(cacheNames = "member", key = "'groupMember'+#roomId")
+    public List<Long> getMemberUidList(Long roomId) {
+        RoomGroup roomGroup = roomGroupDao.getByRoomId(roomId);
+        if (Objects.isNull(roomGroup)) {
+            return null;
+        }
+        return groupMemberDao.getMemberUidList(roomGroup.getId());
+    }
+    //清空缓存
     @CacheEvict(cacheNames = "member", key = "'groupMember'+#roomId")
     public List<Long> evictMemberUidList(Long roomId) {
         return null;

@@ -59,6 +59,7 @@ public class RecallMsgHandler extends AbstractMsgHandler<Object> {
     }
 
     public void recall(Long recallUid, Message message) {//todo 消息覆盖问题用版本号解决
+        //主要就是更新消息的类型，后面获取该消息的详细信息就会通过RecallMsgHandler的show进行展示
         MessageExtra extra = message.getExtra();
         extra.setRecall(new MsgRecall(recallUid, new Date()));
         Message update = new Message();
@@ -66,6 +67,7 @@ public class RecallMsgHandler extends AbstractMsgHandler<Object> {
         update.setType(MessageTypeEnum.RECALL.getType());
         update.setExtra(extra);
         messageDao.updateById(update);
+        //把这个撤回消息的事件发给其他用户
         applicationEventPublisher.publishEvent(new MessageRecallEvent(this, new ChatMsgRecallDTO(message.getId(), message.getRoomId(), recallUid)));
 
     }

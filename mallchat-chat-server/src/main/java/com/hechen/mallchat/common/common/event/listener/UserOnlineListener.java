@@ -46,6 +46,7 @@ public class UserOnlineListener {
                 .activeStatus(UserActiveStatusEnum.ONLINE.getType()).build();
         boolean b = userDao.updateById(update);
         //更新完后进行ip详情的解析，这里要使用淘宝的接口
+        //这里面就包括了删除缓存
         ipService.refreshIpDetailAsync(user.getId());
 
 

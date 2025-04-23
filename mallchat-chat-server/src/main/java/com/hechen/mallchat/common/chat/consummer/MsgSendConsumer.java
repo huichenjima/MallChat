@@ -16,7 +16,9 @@ import com.hechen.mallchat.common.chat.service.cahce.HotRoomCache;
 import com.hechen.mallchat.common.chat.service.cahce.RoomCache;
 import com.hechen.mallchat.common.common.constant.MQConstant;
 import com.hechen.mallchat.common.common.domain.dto.MsgSendMessageDTO;
+import com.hechen.mallchat.common.user.service.adapter.WSAdapter;
 import com.hechen.mallchat.common.user.service.cache.UserCache;
+import com.hechen.mallchat.common.user.service.impl.PushService;
 import com.hechen.mallchat.common.websocket.service.WebSocketService;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -43,10 +45,10 @@ public class MsgSendConsumer implements RocketMQListener<MsgSendMessageDTO> {
     private ChatService chatService;
     @Autowired
     private MessageDao messageDao;
-    @Autowired
-    private IChatAIService openAIService;
-    @Autowired
-    WeChatMsgOperationService weChatMsgOperationService;
+//    @Autowired
+//    private IChatAIService openAIService;
+//    @Autowired
+//    WeChatMsgOperationService weChatMsgOperationService;
     @Autowired
     private RoomCache roomCache;
     @Autowired
@@ -68,8 +70,11 @@ public class MsgSendConsumer implements RocketMQListener<MsgSendMessageDTO> {
 
     @Override
     public void onMessage(MsgSendMessageDTO dto) {
+        //获取该消息
         Message message = messageDao.getById(dto.getMsgId());
+        //获取房间
         Room room = roomCache.get(message.getRoomId());
+        //消息详情和消息点赞踩相关信息
         ChatMessageResp msgResp = chatService.getMsgResp(message, null);
         //所有房间更新房间最新消息
         roomDao.refreshActiveTime(room.getId(), message.getId(), message.getCreateTime());
@@ -87,12 +92,15 @@ public class MsgSendConsumer implements RocketMQListener<MsgSendMessageDTO> {
             } else if (Objects.equals(room.getType(), RoomTypeEnum.FRIEND.getType())) {//单聊对象
                 //对单人推送
                 RoomFriend roomFriend = roomFriendDao.getByRoomId(room.getId());
+                //这里为什么要推送自身？因为多端情况
                 memberUidList = Arrays.asList(roomFriend.getUid1(), roomFriend.getUid2());
             }
             //更新所有群成员的会话时间
             contactDao.refreshOrCreateActiveTime(room.getId(), memberUidList, message.getId(), message.getCreateTime());
             //推送房间成员
+            //推送成功后就是说明消息已经进入消息队列了，下一步是websocket进行消费这些消息
             pushService.sendPushMsg(WSAdapter.buildMsgSend(msgResp), memberUidList);
+
         }
     }
 

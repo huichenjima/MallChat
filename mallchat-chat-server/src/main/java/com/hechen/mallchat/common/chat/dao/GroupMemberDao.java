@@ -44,4 +44,11 @@ public class GroupMemberDao extends ServiceImpl<GroupMemberMapper, GroupMember> 
         return one;
 
     }
+
+    public List<Long> getMemberUidList(Long id) {
+        List<Long> collect = lambdaQuery().eq(GroupMember::getGroupId, id).list().stream().map(GroupMember::getUid).collect(Collectors.toList());
+        return collect;
+
+
+    }
 }

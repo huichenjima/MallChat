@@ -45,22 +45,22 @@ public class ChatController {
         return userCache.getBlackMap().getOrDefault(BlackTypeEnum.UID.getType(), new HashSet<>());
     }
 
-//    @GetMapping("/public/msg/page")
-//    @ApiOperation("消息列表")
+    @GetMapping("/public/msg/page")
+    @ApiOperation("消息列表")
 //    @FrequencyControl(time = 120, count = 20, target = FrequencyControl.Target.IP)
-//    public ApiResult<CursorPageBaseResp<ChatMessageResp>> getMsgPage(@Valid ChatMessagePageReq request) {
-//        CursorPageBaseResp<ChatMessageResp> msgPage = chatService.getMsgPage(request, RequestHolder.get().getUid());
-//        filterBlackMsg(msgPage);
-//        return ApiResult.success(msgPage);
-//    }
-//
-//    private void filterBlackMsg(CursorPageBaseResp<ChatMessageResp> memberPage) {
-//        Set<String> blackMembers = getBlackUidSet();
-//        memberPage.getList().removeIf(a -> blackMembers.contains(a.getFromUser().getUid().toString()));
-//    }
+    public ApiResult<CursorPageBaseResp<ChatMessageResp>> getMsgPage(@Valid ChatMessagePageReq request) {
+        CursorPageBaseResp<ChatMessageResp> msgPage = chatService.getMsgPage(request, RequestHolder.get().getUid());
+        filterBlackMsg(msgPage);
+        return ApiResult.success(msgPage);
+    }
+    //过滤黑名单消息，也即被踢了的
+    private void filterBlackMsg(CursorPageBaseResp<ChatMessageResp> memberPage) {
+        Set<String> blackMembers = getBlackUidSet();
+        memberPage.getList().removeIf(a -> blackMembers.contains(a.getFromUser().getUid().toString()));
+    }
 
     @PostMapping("/msg")
-    @ApiOperation("发送消息")
+    @ApiOperation("发送消息") //包括了回复消息
     @FrequencyControl(time = 5, count = 3, target = FrequencyControl.Target.UID)
     @FrequencyControl(time = 30, count = 5, target = FrequencyControl.Target.UID)
     @FrequencyControl(time = 60, count = 10, target = FrequencyControl.Target.UID)
@@ -78,13 +78,13 @@ public class ChatController {
 //        return ApiResult.success();
 //    }
 //
-//    @PutMapping("/msg/recall")
-//    @ApiOperation("撤回消息")
+    @PutMapping("/msg/recall")
+    @ApiOperation("撤回消息")
 //    @FrequencyControl(time = 20, count = 3, target = FrequencyControl.Target.UID)
-//    public ApiResult<Void> recallMsg(@Valid @RequestBody ChatMessageBaseReq request) {
-//        chatService.recallMsg(RequestHolder.get().getUid(), request);
-//        return ApiResult.success();
-//    }
+    public ApiResult<Void> recallMsg(@Valid @RequestBody ChatMessageBaseReq request) {
+        chatService.recallMsg(RequestHolder.get().getUid(), request);
+        return ApiResult.success();
+    }
 //
 //    @GetMapping("/msg/read/page")
 //    @ApiOperation("消息的已读未读列表")

@@ -50,7 +50,8 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     //客户端主动下线
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-
+        // 可能出现业务判断离线后再次触发 channelInactive
+        log.warn("触发 channelInactive 掉线![{}]", ctx.channel().id());
         userOffline(ctx.channel());
     }
 
@@ -87,7 +88,7 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     //用户下线统一处理
     private void userOffline(Channel channel){
         //清除映射关系，防止OOM问题
-        webSocketService.remove(channel);
+        webSocketService.removed(channel);
         channel.close();
 
     }

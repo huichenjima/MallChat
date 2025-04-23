@@ -31,7 +31,8 @@ public class CursorPageBaseReq {
     private String cursor;
 
     public Page plusPage() {
-        return new Page(1, this.pageSize);
+        //第三个参数表示 是否进行总记录数查询，不进行
+        return new Page(1, this.pageSize, false);
     }
 
     @JsonIgnore

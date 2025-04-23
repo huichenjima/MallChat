@@ -1,6 +1,7 @@
 package com.hechen.mallchat.common.websocket.service;
 
 import com.hechen.mallchat.common.websocket.domain.vo.resp.WSBaseResp;
+import com.hechen.mallchat.common.websocket.domain.vo.resp.WSOnlineOfflineNotify;
 import io.netty.channel.Channel;
 
 /**
@@ -17,7 +18,7 @@ public interface WebSocketService {
 
     void handleLoginReq(Channel channel);
 
-    void remove(Channel channel);
+    void removed(Channel channel);
 
     void scanLoginAndAuthorizeSuccess(Integer code, Long id);
 
@@ -28,4 +29,10 @@ public interface WebSocketService {
     void authorize(Channel channel, String token);
 
     void sendMsgToAll(WSBaseResp<?> msg);
+
+    void sendToUid(WSBaseResp<?> wsBaseResp, Long uid);
+
+    void sendToAllOnline(WSBaseResp<?> wsBaseResp, Long skipUid);
+
+    void sendToAllOnline(WSBaseResp<?> wsBaseResp);
 }

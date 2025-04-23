@@ -21,6 +21,7 @@ public class PushService {
     private MQProducer mqProducer;
     //推送信息给用户
     public void sendPushMsg(WSBaseResp<?> msg, List<Long> uidList) {
+        //这就是集群广播，把所有id存到一条消息中然后广播进所有的websocket
         mqProducer.sendMsg(MQConstant.PUSH_TOPIC, new PushMessageDTO(uidList, msg));
     }
 

@@ -89,8 +89,10 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
         update.setExtra(extra);
         //如果有回复消息
         if (Objects.nonNull(body.getReplyMsgId())) {
+            //计算发送的回复消息和原回复消息中间差了多少条消息
             Integer gapCount = messageDao.getGapCount(msg.getRoomId(), body.getReplyMsgId(), msg.getId());
             update.setGapCount(gapCount);
+            //设置这条消息回复的消息id
             update.setReplyMsgId(body.getReplyMsgId());
 
         }
