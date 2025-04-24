@@ -13,8 +13,9 @@ import java.util.List;
  * Date: 2023-05-27
  */
 public class PrioritizedUrlDiscover extends AbstractUrlDiscover {
-
+    //工厂模式
     private final List<UrlDiscover> urlDiscovers = new ArrayList<>(2);
+
 
     public PrioritizedUrlDiscover() {
         urlDiscovers.add(new WxUrlDiscover());

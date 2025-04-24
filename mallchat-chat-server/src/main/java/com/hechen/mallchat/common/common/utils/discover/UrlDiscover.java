@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
+ * 使用的责任链加并行执行 这个设计框架参考的是ParameterNameDiscoverer
  * @author zhaoqichao
  * @date 2023/7/3 16:34
  */

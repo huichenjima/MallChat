@@ -51,6 +51,7 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
     @Autowired
     private SensitiveWordBs sensitiveWordBs;
 
+    //这里没有使用bean管理，直接当常量
     private static final PrioritizedUrlDiscover URL_TITLE_DISCOVER = new PrioritizedUrlDiscover();
 
     @Override
@@ -112,6 +113,7 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
     public Object showMsg(Message msg) {
         TextMsgResp resp = new TextMsgResp();
         resp.setContent(msg.getContent());
+        //上面通过责任链模式得来的url解析包含了所有url的标题，描述和图
         resp.setUrlContentMap(Optional.ofNullable(msg.getExtra()).map(MessageExtra::getUrlContentMap).orElse(null));
         resp.setAtUidList(Optional.ofNullable(msg.getExtra()).map(MessageExtra::getAtUidList).orElse(null));
         //回复消息
@@ -124,6 +126,7 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
             replyMsgVO.setId(replyMessage.getId());
             replyMsgVO.setUid(replyMessage.getFromUid());
             replyMsgVO.setType(replyMessage.getType());
+            //只有文本消息回复是展示消息体的，其他都是直接写类型，比如图片消息回复上就是写的图片
             replyMsgVO.setBody(MsgHandlerFactory.getStrategyNoNull(replyMessage.getType()).showReplyMsg(replyMessage));
             User replyUser = userCache.getUserInfo(replyMessage.getFromUid());
             replyMsgVO.setUsername(replyUser.getName());

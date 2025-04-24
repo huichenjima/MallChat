@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Document;
 
 /**
+ * 普通网站的获取方式
  * @author zhaoqichao
  * @date 2023/7/3 16:54
  */

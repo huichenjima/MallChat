@@ -42,7 +42,7 @@ public abstract class AbstractUrlDiscover implements UrlDiscover {
         }
         List<String> matchList = ReUtil.findAll(PATTERN, content, 0);
 
-        //并行请求
+        //并行请求 并行去解析
         List<CompletableFuture<Pair<String, UrlInfo>>> futures = matchList.stream().map(match -> CompletableFuture.supplyAsync(() -> {
             UrlInfo urlInfo = getContent(match);
             return Objects.isNull(urlInfo) ? null : Pair.of(match, urlInfo);
@@ -66,7 +66,7 @@ public abstract class AbstractUrlDiscover implements UrlDiscover {
                 .image(getImage(assemble(url), document)).build();
     }
 
-
+    //加http头
     private String assemble(String url) {
 
         if (!StrUtil.startWith(url, "http")) {
@@ -79,6 +79,7 @@ public abstract class AbstractUrlDiscover implements UrlDiscover {
     protected Document getUrlDocument(String matchUrl) {
         try {
             Connection connect = Jsoup.connect(matchUrl);
+            //熔断，时间太长就不解析了
             connect.timeout(2000);
             return connect.get();
         } catch (Exception e) {

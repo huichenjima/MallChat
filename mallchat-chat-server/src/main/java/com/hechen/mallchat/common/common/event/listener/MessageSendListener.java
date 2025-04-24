@@ -74,6 +74,7 @@ public class MessageSendListener {
 //        Message message = messageDao.getById(event.getMsgId());
 //        Room room = roomCache.get(message.getRoomId());
 //        if (isHotRoom(room)) {
+//            //在里面判断了是否消息中@了AI
 //            openAIService.chat(message);
 //        }
 //    }

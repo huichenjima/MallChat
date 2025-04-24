@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Document;
 
 /**
- * Description: 针对微信公众号文章的标题获取类
+ * Description: 针对微信公众号文章的标题获取类 支持爬虫的获取
  * Author: <a href="https://github.com/zongzibinbin">abin</a>
  * Date: 2023-05-27
  */
